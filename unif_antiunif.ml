@@ -18,7 +18,7 @@ let arite t = match t with
   | A | B -> 0
   | _ -> -1;; (* Arité des variables défini à -1, pour avoir un match exhaustif *)
 
-(*Permet de recuperer la x-ième valeur de la liste l, renvoie [] si x>l.lenght*)
+(*Permet de recuperer la x-ième valeur de la liste l, renvoie (E,E) si x>l.lenght*)
 let rec get x l=
   match l with
   |[] -> (E,E)
