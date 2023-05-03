@@ -1,7 +1,5 @@
-open Printf
-open List
-
-type po  = U | V | W | X | Y | A | B | F of po | G of po * po | H of po * po * po (* Termes du premier ordre : d'abord U,V,W,X,Y des variables, puis les fonctions *)
+(*E pour dire element vide utile pour get*)
+type po  = E | U | V | W | X | Y | A | B | F of po | G of po * po | H of po * po * po (* Termes du premier ordre : d'abord U,V,W,X,Y des variables, puis les fonctions *)
                                                                                       
 let cons t1 t2 l= (t1, t2)::l;;
 
@@ -22,8 +20,7 @@ let arite t = match t with
 
 (*Permet de recuperer la x-ième valeur de la liste l, renvoie [] si x>l.lenght*)
 let rec get x l=
-  match (x, l) with
-  |(0, t::q) -> t
-  |(x, t::q) -> get (x-1) q
-  |(x, []) -> [];;
+  match l with
+  |[] -> (E,E)
+  |t::q -> if(x=0) then t else get (x-1) q;;
 
