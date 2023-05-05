@@ -1,3 +1,5 @@
+open List
+
 type po  = U | V | W | X | Y | A | B | F of po | G of po * po | H of po * po * po (* Termes du premier ordre : d'abord U,V,W,X,Y des variables, puis les fonctions *)
 exception Echec of string                                                                   
 
@@ -27,3 +29,13 @@ let rec sup e = function
 let rec swap e = function 
   |[] -> []
   |t::q -> if (t=e) then let (e1, e2)=e in ((e2, e1)::(swap e q)) else (t::(swap e q));;
+
+let rec change_v v p =
+  match p with
+  |A | B -> p
+  |F(v1) -> F(change_v v v1)
+  |G(v1,v2) -> G(change_v v v1, change_v v v2)
+  |H(v1,v2,v3) -> H(change_v v v1, change_v v v2, change_v v v3)
+  |v1 -> if(v1=v) then
+          if (v1=X) then Y else X
+        else v1;;
