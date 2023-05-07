@@ -1,41 +1,57 @@
 open List
 
-type po  = U | V | W | X | Y | A | B | F of po | G of po * po | H of po * po * po (* Termes du premier ordre : d'abord U,V,W,X,Y des variables, puis les fonctions *)
-exception Echec of string                                                                   
+(*string est le nom de la variable/fonction*)
+type po = Var of string | Func of string * po list
+exception Echec of string
 
-let cons t1 t2 l= (t1, t2)::l;;
+let rec apparait x t =
+  match t with
+  |Var y -> x=y
+  |Func(_,args) -> exists (apparait x) args (*exists est comme map mais renvoie un bool qui est egale à  
+                                              f arg1 || f arg2 || ... || f argn (f est une fonction qui renvoie un bool)*) 
 
-let equal_first t1 t2 = (* Fonction utilie pour anti-unif, pour savoir si on a la meme fonction (donc mm nombre d'args) pour recursiver *) 
+let equal_first t1 t2 = 
   match (t1, t2) with
-  | (F _, F _) -> true
-  | (G _, G _) -> true
-  | (H _, H _) -> true
-  | (_, _) -> t1 = t2;;
+  |(Var x, Var y) -> x=y
+  |(Func(f1, arg1), Func(f2, arg2)) -> (length arg1)=(length arg2) && f1=f2
+  |(_, _) -> false (*Si on a Var et Func comme arguments*)
 
-let arite t = match t with 
-  | F(f) -> 1
-  | G(g1,g2) -> 2
-  | H(h1,h2,h3) -> 3
-  | A | B -> 0
-  | _ -> -1;; (* Arité des variables défini à -1, pour avoir un match exhaustif *)
+(*Les constantes s'écriront Func("a", [])*)
+let arite t = 
+  match t with 
+  |Func(f, args) -> length args
+  |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
 
-(*Les systeme d'equation seront représentés par une liste de couple (po,po)*)
-(*e est l'expression (le couple (po,po)) à supprimer*)
-let rec sup e = function
+(*Cherche si dans la liste de couple l l'élément x apparait si oui on renvoie son associer sinon on leve une exception*)
+(*Exemple: getAsso 1 [(2,4);(3,0);(1,2)] renvoie 2*)
+(*Utile pour savoir quelle substitution faire*)
+let rec getAsso x l = assoc x l
+
+(*Exemple: unif (Var "x") (Func("f", [(Var "x");(Var "y");(Var "z")]) va renvoyez 
+  la liste de substitution [(Var "x", (Func("f", [Var "x"; Var "y"; Var "z"])))]
+  qui veut dire qu'on remplace x par f(x,y,z)*)
+let rec list_subs t1 t2 =
+  match (t1, t2) with
+  |(Var x, Var y) when x=y -> Some []
+  |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+  |(Var x, _) -> Some [(Var x, t2)]
+  |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+  |(_, Var y) -> Some [(Var y, t1)]
+  (*|(Func(f, arg1), Func(g, arg2) -> A faire*)
+  |_ -> raise (Echec "non unifiable")
+
+(*Swap les elements de la liste (contient les substitutions que l'on doit faire) si besoin*)
+let rec swap = function 
   |[] -> []
-  |t::q -> if(t=e) then sup e q else t::(sup e q);;
+  |t::q -> match t with
+           |(Func(f, arg), Var x) -> (Var x, Func(f, arg))::(swap q)
+           |(Var x, _) -> t::(swap q)
+           |(_,_) -> t::(swap q)
 
-(*Swap les elements d'un couple*)
-let rec swap e = function 
+(*Supprime les couples (Var x, Var x) dans la liste (contient les substitutions que l'on doit faire)*)
+let rec sup = function
   |[] -> []
-  |t::q -> if (t=e) then let (e1, e2)=e in ((e2, e1)::(swap e q)) else (t::(swap e q));;
-
-let rec change_v v p =
-  match p with
-  |A | B -> p
-  |F(v1) -> F(change_v v v1)
-  |G(v1,v2) -> G(change_v v v1, change_v v v2)
-  |H(v1,v2,v3) -> H(change_v v v1, change_v v v2, change_v v v3)
-  |v1 -> if(v1=v) then
-          if (v1=X) then Y else X
-        else v1;;
+  |t::q -> match t with
+           |(Var x, Func(f, arg)) -> t::(sup q)
+           |(Var x, Var y) -> if(x=y) then sup q else t::(sup q)
+           |(_,_) -> t::(sup q)
