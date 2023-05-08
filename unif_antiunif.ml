@@ -77,7 +77,11 @@ begin
                   end
 end
 
-let unif po1 po2= sub_l (list_subs po1 po2) [po1]
+let unif po1 po2= 
+begin
+  try (sub_l (list_subs po1 po2) [po1]) with
+  |Not_found -> sub_l (list_subs po1 po2) [po2]
+end
 
 (*-----------------------------Fonction qui ne servent a rien pour l'instant---------------------------*)
 (*Comme sub_l mais pour un seul terme*)
