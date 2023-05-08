@@ -5,12 +5,12 @@ type po = Var of string | Func of string * po list
 exception Echec of string
 
 let rec apparait x t =
-  begin
-    match t with
-    |Var y -> x=y
-    |Func(_,args) -> exists (apparait x) args (*exists est comme map mais renvoie un bool qui est egale à  
-                                                f arg1 || f arg2 || ... || f argn (f est une fonction qui renvoie un bool)*) 
-  end
+begin
+  match t with
+  |Var y -> x=y
+  |Func(_,args) -> exists (apparait x) args (*exists est comme map mais renvoie un bool qui est egale à  
+                                              f arg1 || f arg2 || ... || f argn (f est une fonction qui renvoie un bool)*) 
+end
 
 (*Cherche si dans la liste de couple l l'élément x apparait si oui on renvoie son associer sinon on leve une exception*)
 (*Exemple: getAsso 1 [(2,4);(3,0);(1,2)] renvoie 2*)
@@ -29,11 +29,11 @@ end
 let rec get_sub_de_list l1 l2=
 begin
   match (l1, l2) with
-  |([], []) -> Some [] 
-  |(t::q, []) | ([], t::q)-> Some []
+  |([], []) -> None
+  |(t::q, []) | ([], t::q)-> None
   |(t1::q1, t2::q2) -> begin
                         match (t1, t2) with
-                        |(Var x, Var y) when x=y -> Some []
+                        |(Var x, Var y) when x=y -> None
                         |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
                         |(Var x, _) -> Some [(Var x, t2)]
                         |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
@@ -49,13 +49,13 @@ end
 let rec list_subs t1 t2 =
 begin
   match (t1, t2) with
-  |(Var x, Var y) when x=y -> Some []
+  |(Var x, Var y) when x=y -> None
   |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
   |(Var x, _) -> Some [(Var x, t2)]
   |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
   |(_, Var y) -> Some [(Var y, t1)]
   |(Func(f, arg1), Func(g, arg2)) when f=g -> get_sub_de_list arg1 arg2
-  |_ -> raise (Echec "non unifiable")
+  |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
 end
 
 (*Substitue tout les termes t1 de subl par t2 dans la liste l (l est une liste de couple (t1,t2))*)
