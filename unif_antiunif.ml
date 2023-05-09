@@ -60,9 +60,9 @@ end
 let rec getAsso (x : po) (l : (po * po) t) =
 begin
   match l with
-             |[] -> raise Not_found
-             |t::q -> let (t1,t2)=t in
-                      if(t1=x) then t2 else getAsso x q
+    |[] -> raise Not_found
+    |t::q -> let (t1,t2)=t in
+            if(t1=x) then t2 else getAsso x q
 end
 
 (*Prend les arguments de 2 fonctions et envoie une liste de substitution pour l'unification de ces 2 fonctions*)
@@ -102,25 +102,32 @@ end
 (*Exemple: sub_l (Some [(Var "y", Var "A");(Var "x", Var "B")]) [Func("f", [Var "y"; Var "x"]); Func("f", [Var "x"; Var "y"])];;*)
 (*va renvoyez (::) (Func ("f", [Var "A"; Var "B"]), [Func ("f", [Var "B"; Var "A"])])*)
 
-let rec sub_l (subl : (po*po) t  ) (l : po t)=
+let rec sub_l (subl : (po*po) t  ) (l : po )=
 begin
   match subl with
   |[] -> l
   |t::q -> begin
             match l with
-            |[] -> l
-            |h::q ->begin 
-                      match h with
-                      |Var x -> (getAsso h subl)::(sub_l subl q)
-                      |Func(f, arg) -> (Func(f, sub_l subl arg))::(sub_l subl q)
-                    end
+              |Var x -> (getAsso (Var x) subl)
+              |Func(f, arg) -> (Func(f, map (sub_l subl) arg))
           end
 end
 
+(*Swap les elements de la liste (contient les substitutions que l'on doit faire) si besoin*)
+let rec swap = 
+  begin 
+  function 
+  |[] -> []
+  |t::q -> match t with
+            |(Func(f, arg), Var x) -> (Var x, Func(f, arg))::(swap q)
+            |(_,_) -> t::(swap q)
+  end
+
 let unif po1 po2= 
 begin
-  try (sub_l (list_subs po1 po2) [po1]) with
-  |Not_found -> sub_l (list_subs po1 po2) [po2]
+  try (sub_l (list_subs po1 po2)) po1 with
+  |Not_found -> sub_l (list_subs po2 po1) po2
+  |Echec x-> Var "TOP"
 end
 
 (*-----------------------------Fonction qui ne servent a rien pour l'instant---------------------------*)
@@ -129,7 +136,7 @@ let rec sub_t subl t=
 begin
   match t with
   |Var x -> getAsso (Var x) subl
-  |Func(f, arg) -> Func(f, sub_l subl arg)
+  |Func(f, arg) -> Func(f, map (sub_l subl) arg)
 end
 
 (*Supprime les couples (Var x, Var x) dans la liste (contient les substitutions que l'on doit faire)*)
@@ -145,12 +152,3 @@ begin
           end
 end
 
-(*Swap les elements de la liste (contient les substitutions que l'on doit faire) si besoin*)
-let rec swap = 
-begin 
-function 
-|[] -> []
-|t::q -> match t with
-          |(Func(f, arg), Var x) -> (Var x, Func(f, arg))::(swap q)
-          |(_,_) -> t::(swap q)
-end
