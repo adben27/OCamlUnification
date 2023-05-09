@@ -4,12 +4,47 @@ open List
 type po = Var of string | Func of string * po list
 exception Echec of string
 
+(*Les constantes s'écriront Func("a", [])*)
+let arite t =
+  begin 
+    match t with 
+    |Func(f, args) -> length args
+    |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
+  end
+
+let equal_first t1 t2 =
+begin
+  match (t1, t2) with
+  |(Var x, Var y) -> x=y
+  |(Func(f1, _), Func(f2, _)) -> (arite t1)=(arite t2) && f1=f2
+  |(_, _) -> false (*Si on a Var et Func comme arguments*)
+end
+
+let rec renomage x t =
+begin
+  match t with
+  |Var y ->if(x=y) then Var (x^"1") else Var y
+  |Func(f, arg) ->Func(f, map (renomage x) arg)
+end
+
 let rec apparait x t =
 begin
   match t with
   |Var y -> x=y
   |Func(_,args) -> exists (apparait x) args (*exists est comme map mais renvoie un bool qui est egale à  
                                               f arg1 || f arg2 || ... || f argn (f est une fonction qui renvoie un bool)*) 
+end
+
+let rec getVcommun t1 t2 =
+begin
+  match t1 with
+  |Var x -> if(apparait x t2) then Some x else None
+  |Func(f, arg) -> begin
+                   match arg with
+                   |[] -> None
+                   |t::q -> let po=t in
+                            getVcommun po t2
+                   end
 end
 
 (*Cherche si dans la liste de couple l l'élément x apparait si oui on renvoie son associer sinon on leve une exception*)
@@ -26,7 +61,7 @@ begin
 end
 
 (*Prend les arguments de 2 fonctions et envoie une liste de substitution pour l'unification de ces 2 fonctions*)
-let rec get_sub_de_list l1 l2=
+let rec sub_listf l1 l2=
 begin
   match (l1, l2) with
   |([], []) -> None
@@ -38,7 +73,7 @@ begin
                         |(Var x, _) -> Some [(Var x, t2)]
                         |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
                         |(_, Var y) -> Some [(Var y, t1)]
-                        |(Func(f, arg1), Func(g, arg2)) when f=g -> get_sub_de_list q1 q2
+                        |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> sub_listf q1 q2
                         |_ -> raise (Echec "non unifiable")
                        end
 end
@@ -54,12 +89,12 @@ begin
   |(Var x, _) -> Some [(Var x, t2)]
   |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
   |(_, Var y) -> Some [(Var y, t1)]
-  |(Func(f, arg1), Func(g, arg2)) when f=g -> get_sub_de_list arg1 arg2
+  |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> sub_listf arg1 arg2
   |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
 end
 
 (*Substitue tout les termes t1 de subl par t2 dans la liste l (l est une liste de couple (t1,t2))*)
-(*Exemple: sub_l [Func("f", [Var "y"; Var "x"]); Func("f", [Var "x"; Var "y"])] (Some [(Var "y", Var "A");(Var "x", Var "B")]);;*)
+(*Exemple: sub_l (Some [(Var "y", Var "A");(Var "x", Var "B")]) [Func("f", [Var "y"; Var "x"]); Func("f", [Var "x"; Var "y"])];;*)
 (*va renvoyez (::) (Func ("f", [Var "A"; Var "B"]), [Func ("f", [Var "B"; Var "A"])])*)
 
 let rec sub_l (subl : (po*po) t option) (l : po t)=
@@ -113,20 +148,4 @@ function
 |t::q -> match t with
           |(Func(f, arg), Var x) -> (Var x, Func(f, arg))::(swap q)
           |(_,_) -> t::(swap q)
-end
-
-let equal_first t1 t2 =
-begin
-  match (t1, t2) with
-  |(Var x, Var y) -> x=y
-  |(Func(f1, arg1), Func(f2, arg2)) -> (length arg1)=(length arg2) && f1=f2
-  |(_, _) -> false (*Si on a Var et Func comme arguments*)
-end
-
-(*Les constantes s'écriront Func("a", [])*)
-let arite t =
-begin 
-  match t with 
-  |Func(f, args) -> length args
-  |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
 end
