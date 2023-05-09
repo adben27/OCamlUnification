@@ -4,6 +4,13 @@ open List
 type po = Var of string | Func of string * po list
 exception Echec of string
 
+let indice = ref 0
+
+let varZ () =
+  let i = !indice in
+  indice := i+1;
+  Var ("Z" ^ (string_of_int i))
+
 (*Les constantes s'écriront Func("a", [])*)
 let arite t =
   begin 
@@ -43,52 +50,50 @@ begin
                    match arg with
                    |[] -> None
                    |t::q -> let po=t in
-                            getVcommun po t2
+                            getVcommun po t2;
                    end
 end
 
 (*Cherche si dans la liste de couple l l'élément x apparait si oui on renvoie son associer sinon on leve une exception*)
 (*Exemple: getAsso 1 [(2,4);(3,0);(1,2)] renvoie 2*)
 (*Utile pour savoir quelle substitution faire*)
-let rec getAsso (x : po) (l : (po * po) t option) =
+let rec getAsso (x : po) (l : (po * po) t) =
 begin
   match l with
-  |None -> raise Not_found
-  |Some l -> match l with
              |[] -> raise Not_found
              |t::q -> let (t1,t2)=t in
-                      if(t1=x) then t2 else getAsso x (Some q)
+                      if(t1=x) then t2 else getAsso x q
 end
 
 (*Prend les arguments de 2 fonctions et envoie une liste de substitution pour l'unification de ces 2 fonctions*)
 let rec sub_listf l1 l2=
 begin
   match (l1, l2) with
-  |([], []) -> None
-  |(t::q, []) | ([], t::q)-> None
+  |([], []) -> []
+  |(t::q, []) | ([], t::q)-> []
   |(t1::q1, t2::q2) -> begin
                         match (t1, t2) with
-                        |(Var x, Var y) when x=y -> None
+                        |(Var x, Var y) when x=y -> (sub_listf q1 q2)
                         |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
-                        |(Var x, _) -> Some [(Var x, t2)]
+                        |(Var x, _) -> (Var x, t2)::(sub_listf q1 q2)
                         |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
-                        |(_, Var y) -> Some [(Var y, t1)]
-                        |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> sub_listf q1 q2
+                        |(_, Var y) -> (Var y, t1)::(sub_listf q1 q2)
+                        |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (sub_listf arg1 arg2)@(sub_listf q1 q2)
                         |_ -> raise (Echec "non unifiable")
                        end
 end
 
-(*Exemple: unif (Var "x") (Func("f", [Var "x"; Var "y"; Var "z"]) va renvoyez 
+(*Exemple: list_subs (Var "x") (Func("f", [Var "x"; Var "y"; Var "z"]) va renvoyez 
   la liste de substitution [(Var "x", (Func("f", [Var "x"; Var "y"; Var "z"])))]
   qui veut dire qu'on remplace x par f(x,y,z)*)
 let rec list_subs t1 t2 =
 begin
   match (t1, t2) with
-  |(Var x, Var y) when x=y -> None
+  |(Var x, Var y) when x=y -> []
   |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
-  |(Var x, _) -> Some [(Var x, t2)]
+  |(Var x, _) -> [(Var x, t2)]
   |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
-  |(_, Var y) -> Some [(Var y, t1)]
+  |(_, Var y) -> [(Var y, t1)]
   |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> sub_listf arg1 arg2
   |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
 end
@@ -97,19 +102,19 @@ end
 (*Exemple: sub_l (Some [(Var "y", Var "A");(Var "x", Var "B")]) [Func("f", [Var "y"; Var "x"]); Func("f", [Var "x"; Var "y"])];;*)
 (*va renvoyez (::) (Func ("f", [Var "A"; Var "B"]), [Func ("f", [Var "B"; Var "A"])])*)
 
-let rec sub_l (subl : (po*po) t option) (l : po t)=
+let rec sub_l (subl : (po*po) t  ) (l : po t)=
 begin
   match subl with
-  |None | Some [] -> l
-  |Some (t::q) -> begin
-                    match l with
-                    |[] -> l
-                    |h::q ->begin 
-                              match h with
-                              |Var x -> (getAsso h subl)::(sub_l subl q)
-                              |Func(f, arg) -> (Func(f, sub_l subl arg))::(sub_l subl q)
-                            end
-                  end
+  |[] -> l
+  |t::q -> begin
+            match l with
+            |[] -> l
+            |h::q ->begin 
+                      match h with
+                      |Var x -> (getAsso h subl)::(sub_l subl q)
+                      |Func(f, arg) -> (Func(f, sub_l subl arg))::(sub_l subl q)
+                    end
+          end
 end
 
 let unif po1 po2= 
