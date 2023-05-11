@@ -4,6 +4,19 @@ open List
 type po = Var of string | Func of string * po list
 exception Echec of string
 
+let rec print_po p =
+  match p with
+  | Var s -> Printf.printf "%s" s
+  | Func (f, args) ->
+      Printf.printf "%s(" f;
+      print_list args;
+      Printf.printf ")"
+
+and print_list = function
+  | [] -> ()
+  | [x] -> print_po x
+  | x::xs -> print_po x; Printf.printf ", "; print_list xs;;
+
 let indice = ref 0
 
 let varZ () =
