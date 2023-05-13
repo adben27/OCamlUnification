@@ -129,10 +129,11 @@ end
 (*Si il y a un try with c'est parceque dans certain cas (subl (list_subs_u po1 po2) po1) 
   renvoie Not_found (voir getAsso) alors qu'il ne devrai pas mais si on fait (subl (list_subs_u po1 po2) po2)
   au lieu de (subl (list_subs_u po1 po2) po1) on resout le problème du Not_found*)
-let unif po1 po2= 
+let unif po1 po2=
+let list = list_subs_u po1 po2 in
 begin
-  try (sub_lu (list_subs_u po1 po2) po1) with
-  |Not_found -> sub_lu (list_subs_u po1 po2) po2
+  try (sub_lu list po1) with
+  |Not_found -> sub_lu list po2
   |Echec x-> Var "TOP"
 end
 
