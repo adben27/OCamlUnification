@@ -129,7 +129,7 @@ begin
           end
 end
 
-(*Unifit les termes po1 et po2*)
+(*Unifie les termes po1 et po2*)
 (*Si il y a un try with c'est parceque dans certain cas (subl (list_subs_u po1 po2) po1) 
   renvoie Not_found (voir getAsso) alors qu'il ne devrai pas mais si on fait (subl (list_subs_u po1 po2) po2)
   au lieu de (subl (list_subs_u po1 po2) po1) on resout le problème du Not_found*)
@@ -168,24 +168,12 @@ begin
   |(Func(f, arg1), Func(g, arg2)) -> [((t1, t2), varZ())] (*f et g different*)
 end
 
-(*revoie les substitution des arguments d'une fonction*)
-let rec subf_lau subl l1 l2=
-begin
-  match (l1,l2) with
-  |(t1::q1, t2::q2) -> begin
-                        try (getAsso (t1,t2) subl) with
-                        |Not_found -> subf_lau subl q1 q2 
-                       end
-  |_ -> varZ()
-end
-
 (*Fait l'anti-unification des termes t1 et t2*)
-let rec anti_unif t1 t2 = 
-  let list=(list_sub_au t1 t2) in
+let rec anti_unif t1 t2 =
 begin
   match (t1,t2) with
-    |(Var x, _) -> indice:=0; (getAsso (t1,t2) list)
-    |(_, Var x) -> indice:=0; (getAsso (t1,t2) list)
+    |(Var x, _) -> (getAsso (t1,t2) (list_sub_au t1 t2))
+    |(_, Var x) -> (getAsso (t1,t2) (list_sub_au t1 t2))
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
     |_ -> varZ()
 end
@@ -221,3 +209,14 @@ let rec swap =
             |(Func(f, arg), Var x) -> (Var x, Func(f, arg))::(swap q)
             |(_,_) -> t::(swap q)
   end
+
+(*revoie les substitution des arguments d'une fonction*)
+let rec subf_lau subl l1 l2=
+begin
+  match (l1,l2) with
+  |(t1::q1, t2::q2) -> begin
+                        try (getAsso (t1,t2) subl) with
+                        |Not_found -> subf_lau subl q1 q2 
+                       end
+  |_ -> varZ()
+end
