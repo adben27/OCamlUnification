@@ -1,0 +1,242 @@
+DOUZI Jibril 12100516               Rapport
+BENNOUAR Adel
+
+
+Présentation du sujet et de sa solution algorithmique:
+
+    Le but du projet est d’implémenter en OCaml les algorithmes d’unification et 
+d’anti-unification.
+
+Pour implémenter l'algorithme d'unification on a choisit de représenter le 
+systeme d'équation qui permet l'unification de deux termes du premier ordre par 
+une liste de couple de terme du premier ordre, par exemple le système d'équation
+"x=f(y) | y=a" (a est une constante) qui veut dire "remplacer tout les "x" par 
+"f(y)" et tout les "y" par "a" sera représenter par la liste 
+[(Var "x", Func("f", [Var "y"])); (Var "y", Func("a", []))], le premier élément 
+d'un couple est ce que l'on veut remplacer et le deuxième élément est ce que par
+quoi on veut remplacer le premier élément. et on applique ces substitutions à 
+l'un des deux termes si on a une exception alors on applique ces substitutions à
+l'autre terme.
+
+    Pour implémenter l'algorithme d'anti-unification on représente le système 
+d'équation de la même manière que pour l'unification mais le premier élément du
+couple est un couple qui est le même que celui de l'unification et le deuxième
+élément est la variable qui va remplacer ces deux termes, par exemple on veut
+faire l'anti-unification de "h(x,f(y),x)" avec h(a,f(b),a) on aura alors la
+liste [((Var "y", Func("b", [])), Var "Z1"); ((Var "x", Func("a", [])), Var "Z0)]
+et on applique renvoie le terme "Var Zi" si le paterne des deux termes du premier
+ordre qu'on veut anti-unifier est dans la liste des substitutions.
+
+
+Choix d’implémentation et des problèmes rencontrés:
+
+    On a defini le type 'po' qui a deux constructeur, le constructeur 'Var' qui 
+prend une chaine de caractère, ce constructeur représente les variables, et le
+constructeur 'Func' qui prend un couple, le premier élément de se couple est une 
+chaine de caractère qui représente son nom, et le deuxième élément est une liste
+de terme du premier ordre qui représente ses arguments.
+
+    Un des problèmes majeur qu'on a rencontrés est que on devait écrire souvent 
+la même fonction mais avec des arguments different par exemple pour avoir la 
+liste des substitutions à faire pour l'unification, on avait une fonction qui 
+prend en argument deux termes du premier ordre et une autre qui prend deux 
+listes de terme du premier ordre, la fonction qui prend deux listes nous est 
+utile car elle permet de faire la liste des substitutions sur les arguments des
+fonctions (celle du premier ordre), la fonction qui prend des termes du premier 
+ordre nous est utile car elle permet de faire la liste des substitutions avec 
+une variable et un terme quelconque du premier ordre
+
+
+listing du code:
+
+PRECISION: On utilise le module List et dans ce module il y a un allias de 'list'
+           qui est 't' donc si vous voyez 'list ou 't' cela veut dire la même chose
+
+--------------------------------------------------------------------------------
+let indice = ref 0
+let varZ () =
+  let i = !indice in
+  indice := i+1;
+  Var ("Z" ^ (string_of_int i))
+
+type : unit -> po
+Cree une variable "Zi" utile pour "anti_unif"
+--------------------------------------------------------------------------------
+let arite t =
+  begin 
+    match t with 
+    |Func(f, args) -> length args
+    |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
+  end
+
+type: po -> int
+Donne l'arite de la fonction "t"
+--------------------------------------------------------------------------------
+let equal_first t1 t2 =
+begin
+  match (t1, t2) with
+  |(Var x, Var y) -> x=y
+  |(Func(f1, _), Func(f2, _)) -> (((arite t1)=(arite t2)) && (f1=f2))
+  |(_, _) -> false (*Si on a Var et Func comme arguments*)
+end
+
+type: po -> po -> bool
+Dit si 2 termes sont égaux
+--------------------------------------------------------------------------------
+let rec renomage x t =
+begin
+  match t with
+  |Var y ->if(x=y) then Var (x^"1") else Var y
+  |Func(f, arg) ->Func(f, map (renomage x) arg)
+end
+
+type: string -> po -> po
+Renome toute les variable x qu'il y a dans t par "x1"
+--------------------------------------------------------------------------------
+let rec apparait x t =
+begin
+  match t with
+  |Var y -> x=y
+  |Func(_,args) -> exists (apparait x) args 
+end
+
+type: string -> po -> bool
+Dit si la variable "x" apparait dans le terme "t"
+--------------------------------------------------------------------------------
+let rec getVcommun t1 t2 =
+begin
+  match t1 with
+  |Var x -> if(apparait x t2) then renomage x t2 else t2
+  |Func(f, arg) -> begin
+                   match arg with
+                   |[] -> t2
+                   |t::q -> t2 (*A FAIRE*)
+                   end
+end
+
+type: po -> po -> po
+Renome toutes les variables communne entre t1 t2
+--------------------------------------------------------------------------------
+let rec getAsso x l =
+begin
+  match l with
+    |[] -> raise Not_found
+    |t::q -> let (t1,t2)=t in
+            if(t1=x) then t2 else getAsso x q
+end
+
+type: 'a -> ('a * 'b) t -> 'b
+Cherche si dans la liste de couple "l" l'élément "x" apparait si oui on renvoie 
+son associer sinon on leve une exception. Utile pour savoir quelle substitution 
+faire
+--------------------------------------------------------------------------------
+let rec list_subf_u l1 l2=
+begin
+  match (l1, l2) with
+  |([], []) -> []
+  |(t::q, []) | ([], t::q)-> []
+  |(t1::q1, t2::q2) -> begin
+                        match (t1, t2) with
+                        |(Var x, Var y) when x=y -> (list_subf_u q1 q2)
+                        |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+                        |(Var x, _) -> (Var x, t2)::(list_subf_u q1 q2)
+                        |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+                        |(_, Var y) -> (Var y, t1)::(list_subf_u q1 q2)
+                        |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_u arg1 arg2)@(list_subf_u q1 q2)
+                        |_ -> raise (Echec "non unifiable")
+                       end
+end
+
+type: po t -> po t -> (po * po) t
+Prend les arguments de 2 fonctions et envoie une liste de substitution pour 
+l'unification de ces 2 fonctions
+--------------------------------------------------------------------------------
+let rec list_subs_u t1 t2 =
+begin
+  match (t1, t2) with
+  |(Var x, Var y) when x=y -> []
+  |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+  |(Var x, _) -> [(Var x, t2)]
+  |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+  |(_, Var y) -> [(Var y, t1)]
+  |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> list_subf_u arg1 arg2
+  |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
+end
+
+type: po -> po -> (po * po) t
+Comme 'list_subf_u' mais prend deux termes du premier ordre en arguments
+--------------------------------------------------------------------------------
+let rec sub_lu subl t=
+begin
+  match subl with
+  |[] -> t
+  |t1::q -> begin
+            match t with
+              |Var x -> (getAsso (Var x) subl)
+              |Func(f, arg) -> (Func(f, map (sub_lu subl) arg))
+          end
+end
+
+type: (po *po) t -> po -> po
+Substitue tout les termes t1 de subl par t2 dans la liste l
+(l est une liste de couple (t1,t2))
+--------------------------------------------------------------------------------
+let unif po1 po2=
+let list = list_subs_u po1 po2 in
+begin
+  try (sub_lu list po1) with
+  |Not_found -> sub_lu list po2
+  |Echec x-> Var "TOP"
+end
+
+type: po -> po -> po
+Unifie les termes po1 et po2
+--------------------------------------------------------------------------------
+let rec list_subf_au l1 l2 =
+begin
+  match (l1, l2) with
+  |([], []) -> []
+  |(t::q, []) | ([], t::q) -> []
+  |(t1::q1, t2::q2) -> begin
+                        match (t1, t2) with
+                        |(Var x, Var y) when x=y -> (list_subf_au q1 q2)
+                        |(Var x, _) -> ((Var x, t2), varZ())::(list_subf_au q1 q2)
+                        |(_, Var y) -> ((t1, Var y), varZ())::(list_subf_au q1 q2)
+                        |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_au arg1 arg2)@(list_subf_au q1 q2)
+                        |_ -> raise (Echec "non unifiable")
+                      end
+end
+
+type: po t -> po t -> ((po * po) * po) t
+Renvoie la liste des substitutions des arguments de 2 fonctions pour anti-unif
+--------------------------------------------------------------------------------
+let list_sub_au t1 t2 =
+begin
+  match (t1,t2) with
+  |(Var x, Var y) -> [((t1, t2), varZ())]
+  |(Var x, _) -> [((t1, t2), varZ())]
+  |(_, Var x) -> [((t1, t2), varZ())]
+  |(Func(f, arg1), Func(g, arg2)) when ((equal_first t1 t2)) -> list_subf_au arg1 arg2
+  |(Func(f, arg1), Func(g, arg2)) -> [((t1, t2), varZ())] (*f et g different*)
+end
+
+type: po -> po -> ((po * po) * po) t
+Renvoie la liste des substitutions pour anti-unif
+--------------------------------------------------------------------------------
+let rec anti_unif t1 t2 = 
+  let list=(list_sub_au t1 t2) in
+begin
+  match (t1,t2) with
+    |(Var x, _) -> indice:=0; (getAsso (t1,t2) list)
+    |(_, Var x) -> indice:=0; (getAsso (t1,t2) list)
+    |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
+    |_ -> varZ()
+end
+
+type: po -> po -> po
+Fait l'anti-unification des termes t1 et t2
+--------------------------------------------------------------------------------
+
+Jeux d’essais:
+
+(A FAIRE QUAND LES BUGS SERONT CORRIGE)
