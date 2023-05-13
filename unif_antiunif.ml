@@ -16,14 +16,15 @@ and print_list = function
   | [] -> ()
   | [x] -> print_po x
   | x::xs -> print_po x; Printf.printf ", "; print_list xs;;
-
+  
+(*Cree une variable "Zi" utile pour "anti_unif"*)
 let indice = ref 0
-
 let varZ () =
   let i = !indice in
   indice := i+1;
   Var ("Z" ^ (string_of_int i))
 
+(*Donne l'arite de la fonction "t"*)
 (*Les constantes s'écriront Func("a", [])*)
 let arite t =
   begin 
@@ -32,6 +33,7 @@ let arite t =
     |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
   end
 
+(*Dit si 2 termes sont égaux*)
 let equal_first t1 t2 =
 begin
   match (t1, t2) with
@@ -40,6 +42,7 @@ begin
   |(_, _) -> false (*Si on a Var et Func comme arguments*)
 end
 
+(*Renome toute les variable x qu'il y a dans t par "x1"*)
 let rec renomage x t =
 begin
   match t with
@@ -47,6 +50,7 @@ begin
   |Func(f, arg) ->Func(f, map (renomage x) arg)
 end
 
+(*Dit si la variable "x" apparait dans le terme "t"*)
 let rec apparait x t =
 begin
   match t with
@@ -67,7 +71,7 @@ begin
                    end
 end
 
-(*Cherche si dans la liste de couple l l'élément x apparait si oui on renvoie son associer sinon on leve une exception*)
+(*Cherche si dans la liste de couple "l" l'élément "x" apparait si oui on renvoie son associer sinon on leve une exception*)
 (*Exemple: getAsso 1 [(2,4);(3,0);(1,2)] renvoie 2*)
 (*Utile pour savoir quelle substitution faire*)
 let rec getAsso x l =
@@ -175,11 +179,11 @@ begin
   |_ -> varZ()
 end
 
+(*Fait l'anti-unification des termes t1 et t2*)
 let rec anti_unif t1 t2 = 
   let list=(list_sub_au t1 t2) in
 begin
   match (t1,t2) with
-    |(Var x, Var y) -> indice:=0; (getAsso (t1,t2) list)
     |(Var x, _) -> indice:=0; (getAsso (t1,t2) list)
     |(_, Var x) -> indice:=0; (getAsso (t1,t2) list)
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
