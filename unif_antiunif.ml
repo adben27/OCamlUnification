@@ -174,23 +174,13 @@ begin
   |_ -> varZ()
 end
 
-(*renvoie les substitution de la liste subl*)
-let sub_lau subl t1 t2=
-begin
-  match (t1,t2) with
-  |(Var x, _) -> getAsso (t1,t2) subl
-  |(_, Var x) -> getAsso (t1,t2) subl
-  |(Func(f, arg1), Func(g, arg2)) -> subf_lau subl arg1 arg2
-end
-
 let rec anti_unif t1 t2 = 
-  let list=ref (list_sub_au t1 t2) in
-  let l = !list in
+  let list=(list_sub_au t1 t2) in
 begin
   match (t1,t2) with
-    |(Var x, Var y) -> indice:=0; list:=(list_sub_au t1 t2); (getAsso (t1,t2) l)
-    |(Var x, _) -> indice:=0; list:=(list_sub_au t1 t2); (getAsso (t1,t2) l)
-    |(_, Var x) -> indice:=0; list:=(list_sub_au t1 t2); (getAsso (t1,t2) l)
+    |(Var x, Var y) -> indice:=0; (getAsso (t1,t2) list)
+    |(Var x, _) -> indice:=0; (getAsso (t1,t2) list)
+    |(_, Var x) -> indice:=0; (getAsso (t1,t2) list)
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
     |_ -> varZ()
 end
