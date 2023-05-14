@@ -91,12 +91,12 @@ begin
   |(t1::q1, t2::q2) -> begin
                         match (t1, t2) with
                         |(Var x, Var y) when x=y -> (list_subf_u q1 q2)
-                        |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+                        |(Var x, _) when (apparait x t2) -> raise (Echec "TOP")
                         |(Var x, _) -> (Var x, t2)::(list_subf_u q1 q2)
-                        |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+                        |(_, Var y) when (apparait y t1) -> raise (Echec "TOP")
                         |(_, Var y) -> (Var y, t1)::(list_subf_u q1 q2)
                         |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_u arg1 arg2)@(list_subf_u q1 q2)
-                        |_ -> raise (Echec "non unifiable")
+                        |_ -> raise (Echec "TOP")
                        end
 end
 
@@ -107,12 +107,12 @@ let rec list_subs_u t1 t2 =
 begin
   match (t1, t2) with
   |(Var x, Var y) when x=y -> []
-  |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+  |(Var x, _) when (apparait x t2) -> raise (Echec "TOP")
   |(Var x, _) -> [(Var x, t2)]
-  |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+  |(_, Var y) when (apparait y t1) -> raise (Echec "TOP")
   |(_, Var y) -> [(Var y, t1)]
   |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> list_subf_u arg1 arg2
-  |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
+  |_ -> raise (Echec "TOP") (*Pour avoir un match exhaustive*)
 end
 
 (*Substitue tout les termes t1 de subl par t2 dans la liste l (l est une liste de couple (t1,t2))*)
@@ -138,7 +138,6 @@ let list = list_subs_u po1 po2 in
 begin
   try (sub_lu list po1) with
   |Not_found -> sub_lu list po2
-  |Echec x-> Var "TOP"
 end
 
 (*Renvoie la liste des substitutions des arguments de 2 fonctions pour anti-unif*)
@@ -153,7 +152,7 @@ begin
                         |(Var x, _) -> ((Var x, t2), varZ())::(list_subf_au q1 q2)
                         |(_, Var y) -> ((t1, Var y), varZ())::(list_subf_au q1 q2)
                         |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_au arg1 arg2)@(list_subf_au q1 q2)
-                        |_ -> raise (Echec "non unifiable")
+                        |_ -> raise (Echec "TOP")
                       end
 end
 
