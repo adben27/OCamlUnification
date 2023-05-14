@@ -164,7 +164,8 @@ begin
   |(Var x, _) -> [((t1, t2), varZ())]
   |(_, Var x) -> [((t1, t2), varZ())]
   |(Func(f, arg1), Func(g, arg2)) when ((equal_first t1 t2)) -> list_subf_au arg1 arg2
-  |(Func(f, arg1), Func(g, arg2)) -> [((t1, t2), varZ())] (*f et g different*)
+  |(Func(f, arg1), Func(g, arg2)) when f<>g -> [((t1, t2), varZ())] (*f et g different*)
+  |_ -> raise (Echec "Certaines fonctions n'ont pas la même arite")
 end
 
 (*Fait l'anti-unification des termes t1 et t2*)
@@ -174,6 +175,7 @@ begin
     |(Var x, _) -> (getAsso (t1,t2) (list_sub_au t1 t2))
     |(_, Var x) -> (getAsso (t1,t2) (list_sub_au t1 t2))
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
+    |(Func(f, arg1), Func(g, arg2)) when (not(equal_first t1 t2)) && f=g -> raise (Echec "Certaines fonctions n'ont pas la même arite")
     |_ -> varZ()
 end
 
