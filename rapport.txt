@@ -239,4 +239,26 @@ Fait l'anti-unification des termes t1 et t2
 
 Jeux d’essais:
 
-(A FAIRE QUAND LES BUGS SERONT CORRIGE)
+Pour facilité la lisibilité des termes du premier ordre on va noté les variables 
+par des majuscules et les fonctions par des minuscules au lieu d'utilier Var et 
+Func.
+
+Jeux d’essais avec l'unification:
+
+unif X f(Y,a) -> f(Y,a)
+unif f(Y,Y) g(X) -> TOP
+unif f(Y,Y) f(X) -> TOP
+unif f(Y,Y) f(a,b) -> f(a,a)
+unif f(X,Y) f(a,g(Z)) -> f(a,g(Z))
+unif f(X,g(Y,U)) f(a,g(Z)) -> TOP
+unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(a,g(Z,P))
+
+Jeux d’essais avec l'anti-unification:
+
+anti_unif X f(Y,a) -> Z0
+anti_unif f(Y,Y) g(X) -> Z0
+anti_unif f(Y,Y) f(X) -> Echec
+anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2) (bug pas corrige)
+anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)
+anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec
+anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))
