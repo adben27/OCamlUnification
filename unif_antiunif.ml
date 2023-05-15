@@ -4,6 +4,10 @@ open List
 type po = Var of string | Func of string * po list
 exception Echec of string
 
+let string_of_po t = match t with
+        | Var s -> s
+        | Func(s, args) -> s;;
+
 let rec print_po p =
   match p with
   | Var s -> Printf.printf "%s" s
@@ -67,7 +71,8 @@ begin
   |Func(f, arg) -> begin
                    match arg with
                    |[] -> t2
-                   |t::q -> t2 (*A FAIRE*)
+                   |t::q -> if(apparait (string_of_po t) t2) then renomage (string_of_po t) t2
+                   else getVcommun (Func(f, q)) t2
                    end
 end
 

@@ -1,42 +1,45 @@
-DOUZI Jibril 12100516               Rapport
-BENNOUAR Adel
+<div align="center">
+  <center><h1>Rapport</h1></center>
+</div>
+
+### DOUZI Jibril 12100516               
+### BENNOUAR Adel 12003494
 
 
-Présentation du sujet et de sa solution algorithmique:
-
-    Le but du projet est d’implémenter en OCaml les algorithmes d’unification et 
+# Présentation du sujet et de sa solution algorithmique
+Le but du projet est d’implémenter en OCaml les algorithmes d’unification et 
 d’anti-unification.
 
 Pour implémenter l'algorithme d'unification on a choisit de représenter le 
 systeme d'équation qui permet l'unification de deux termes du premier ordre par 
 une liste de couple de terme du premier ordre, par exemple le système d'équation
-"x=f(y) | y=a" (a est une constante) qui veut dire "remplacer tout les "x" par 
-"f(y)" et tout les "y" par "a" sera représenter par la liste 
-[(Var "x", Func("f", [Var "y"])); (Var "y", Func("a", []))], le premier élément 
-d'un couple est ce que l'on veut remplacer et le deuxième élément est ce que par
+`x=f(y) | y=a` (a est une constante) qui veut dire "remplacer tout les "x" par 
+"f(y)" et tout les "y" par "a" sera représenté par la liste 
+`[(Var "x", Func("f", [Var "y"])); (Var "y", Func("a", []))]`, le premier élément 
+d'un couple est ce que l'on veut remplacer et le deuxième élément est ce par
 quoi on veut remplacer le premier élément. et on applique ces substitutions à 
-l'un des deux termes si on a une exception alors on applique ces substitutions à
+l'un des deux termes, et si on a une exception alors on applique ces substitutions à
 l'autre terme.
 
-    Pour implémenter l'algorithme d'anti-unification on représente le système 
+Pour implémenter l'algorithme d'anti-unification on représente le système 
 d'équation de la même manière que pour l'unification mais le premier élément du
 couple est un couple qui est le même que celui de l'unification et le deuxième
 élément est la variable qui va remplacer ces deux termes, par exemple on veut
-faire l'anti-unification de "h(x,f(y),x)" avec h(a,f(b),a) on aura alors la
-liste [((Var "y", Func("b", [])), Var "Z1"); ((Var "x", Func("a", [])), Var "Z0)]
-et on applique renvoie le terme "Var Zi" si le paterne des deux termes du premier
+faire l'anti-unification de `h(x,f(y),x)` avec `h(a,f(b),a)` on aura alors la
+liste `[((Var "y", Func("b", [])), Var "Z1"); ((Var "x", Func("a", [])), Var "Z0)]`
+et on applique renvoie le terme "Var Zi" si le pattern des deux termes du premier
 ordre qu'on veut anti-unifier est dans la liste des substitutions.
 
 
-Choix d’implémentation et des problèmes rencontrés:
+# Choix d’implémentation et des problèmes rencontrés
 
-    On a defini le type 'po' qui a deux constructeur, le constructeur 'Var' qui 
+On a defini le type `po` qui a deux constructeur, le constructeur `Var` qui 
 prend une chaine de caractère, ce constructeur représente les variables, et le
-constructeur 'Func' qui prend un couple, le premier élément de se couple est une 
+constructeur `Func` qui prend un couple. Le premier élément de ce couple est une 
 chaine de caractère qui représente son nom, et le deuxième élément est une liste
 de terme du premier ordre qui représente ses arguments.
 
-    Un des problèmes majeur qu'on a rencontrés est que on devait écrire souvent 
+Un des problèmes majeurs qu'on a rencontrés est que on devait écrire souvent 
 la même fonction mais avec des arguments different par exemple pour avoir la 
 liste des substitutions à faire pour l'unification, on avait une fonction qui 
 prend en argument deux termes du premier ordre et une autre qui prend deux 
@@ -47,31 +50,36 @@ ordre nous est utile car elle permet de faire la liste des substitutions avec
 une variable et un terme quelconque du premier ordre
 
 
-listing du code:
+# Listing du code
 
-PRECISION: On utilise le module List et dans ce module il y a un allias de 'list'
+- PRECISION: On utilise le module List et dans ce module il y a un allias de 'list'
            qui est 't' donc si vous voyez 'list ou 't' cela veut dire la même chose
 
 --------------------------------------------------------------------------------
+```
 let indice = ref 0
 let varZ () =
   let i = !indice in
   indice := i+1;
   Var ("Z" ^ (string_of_int i))
+```
 
-type : unit -> po
-Cree une variable "Zi" utile pour "anti_unif"
+Type : `unit -> po`
+##### Cree une variable "Zi" utile pour "anti_unif"
 --------------------------------------------------------------------------------
+```
 let arite t =
   begin 
     match t with 
     |Func(f, args) -> length args
     |Var x -> raise (Invalid_argument "Prend Func et pas Var comme argument")
   end
+```
 
-type: po -> int
-Donne l'arite de la fonction "t"
+Type: `po -> int`
+##### Donne l'arite de la fonction "t"
 --------------------------------------------------------------------------------
+```
 let equal_first t1 t2 =
 begin
   match (t1, t2) with
@@ -79,30 +87,36 @@ begin
   |(Func(f1, _), Func(f2, _)) -> (((arite t1)=(arite t2)) && (f1=f2))
   |(_, _) -> false (*Si on a Var et Func comme arguments*)
 end
+```
 
-type: po -> po -> bool
-Dit si 2 termes sont égaux
+Type: `po -> po -> bool`
+##### Dit si 2 termes sont égaux
 --------------------------------------------------------------------------------
+```
 let rec renomage x t =
 begin
   match t with
   |Var y ->if(x=y) then Var (x^"1") else Var y
   |Func(f, arg) ->Func(f, map (renomage x) arg)
 end
+```
 
-type: string -> po -> po
-Renome toute les variable x qu'il y a dans t par "x1"
+Type: `string -> po -> po`
+##### Renomme toutes les variables x qu'il y a dans t par "x1"
 --------------------------------------------------------------------------------
+```
 let rec apparait x t =
 begin
   match t with
   |Var y -> x=y
   |Func(_,args) -> exists (apparait x) args 
 end
+```
 
-type: string -> po -> bool
-Dit si la variable "x" apparait dans le terme "t"
+Type: `string -> po -> bool`
+##### Dit si la variable "x" apparait dans le terme "t"
 --------------------------------------------------------------------------------
+```
 let rec getVcommun t1 t2 =
 begin
   match t1 with
@@ -110,13 +124,16 @@ begin
   |Func(f, arg) -> begin
                    match arg with
                    |[] -> t2
-                   |t::q -> t2 (*A FAIRE*)
+                   |t::q -> if(apparait (string_of_po t) t2) then renomage (string_of_po t) t2
+                   else getVcommun (Func(f, q)) t2
                    end
 end
+```
 
-type: po -> po -> po
-Renome toutes les variables communes entre t1 t2
+Type: `po -> po -> po`
+##### Renomme toutes les variables communes entre t1 t2
 --------------------------------------------------------------------------------
+```
 let rec getAsso x l =
 begin
   match l with
@@ -124,12 +141,12 @@ begin
     |t::q -> let (t1,t2)=t in
             if(t1=x) then t2 else getAsso x q
 end
+```
 
-type: 'a -> ('a * 'b) t -> 'b
-Cherche si dans la liste de couple "l" l'élément "x" apparait si oui on renvoie 
-son associer sinon on leve une exception. Utile pour savoir quelle substitution 
-faire
+Type: `'a -> ('a * 'b) t -> 'b`
+##### Cherche si dans la liste de couple "l" l'élément "x" apparait. Si oui, on renvoie son associé, sinon on lève une exception. Utile pour savoir quelle substitution faire
 --------------------------------------------------------------------------------
+```
 let rec list_subf_u l1 l2=
 begin
   match (l1, l2) with
@@ -146,11 +163,12 @@ begin
                         |_ -> raise (Echec "non unifiable")
                        end
 end
+```
 
-type: po t -> po t -> (po * po) t
-Prend les arguments de 2 fonctions et envoie une liste de substitution pour 
-l'unification de ces 2 fonctions
+Type: `po t -> po t -> (po * po) t`
+##### Prend les arguments de 2 fonctions et envoie une liste de substitution pour  l'unification de ces 2 fonctions
 --------------------------------------------------------------------------------
+```
 let rec list_subs_u t1 t2 =
 begin
   match (t1, t2) with
@@ -162,10 +180,12 @@ begin
   |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> list_subf_u arg1 arg2
   |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
 end
+```
 
-type: po -> po -> (po * po) t
-Comme 'list_subf_u' mais prend deux termes du premier ordre en arguments
+Type: `po -> po -> (po * po) t`
+##### Comme 'list_subf_u' mais prend deux termes du premier ordre en arguments
 --------------------------------------------------------------------------------
+```
 let rec sub_lu subl t=
 begin
   match subl with
@@ -176,11 +196,12 @@ begin
               |Func(f, arg) -> (Func(f, map (sub_lu subl) arg))
           end
 end
+```
 
-type: (po *po) t -> po -> po
-Substitue tout les termes t1 de subl par t2 dans la liste l
-(l est une liste de couple (t1,t2))
+Type: `(po *po) t -> po -> po`
+##### Substitue tous les termes t1 de subl par t2 dans la liste l (l est une liste de couple (t1,t2))
 --------------------------------------------------------------------------------
+```
 let unif po1 po2=
 let list = list_subs_u po1 po2 in
 begin
@@ -188,10 +209,12 @@ begin
   |Not_found -> sub_lu list po2
   |Echec x-> Var "TOP"
 end
+```
 
-type: po -> po -> po
-Unifie les termes po1 et po2
+Type: `po -> po -> po`
+##### Unifie les termes po1 et po2
 --------------------------------------------------------------------------------
+```
 let rec list_subf_au l1 l2 =
 begin
   match (l1, l2) with
@@ -206,10 +229,12 @@ begin
                         |_ -> raise (Echec "non unifiable")
                       end
 end
+```
 
-type: po t -> po t -> ((po * po) * po) t
-Renvoie la liste des substitutions des arguments de 2 fonctions pour anti-unif
+Type: `po t -> po t -> ((po * po) * po) t`
+##### Renvoie la liste des substitutions des arguments de 2 fonctions pour anti-unif
 --------------------------------------------------------------------------------
+```
 let list_sub_au t1 t2 =
 begin
   match (t1,t2) with
@@ -219,10 +244,12 @@ begin
   |(Func(f, arg1), Func(g, arg2)) when ((equal_first t1 t2)) -> list_subf_au arg1 arg2
   |(Func(f, arg1), Func(g, arg2)) -> [((t1, t2), varZ())] (*f et g different*)
 end
+```
 
-type: po -> po -> ((po * po) * po) t
-Renvoie la liste des substitutions pour anti-unif
+Type: `po -> po -> ((po * po) * po) t`
+##### Renvoie la liste des substitutions pour anti-unif
 --------------------------------------------------------------------------------
+```
 let rec anti_unif t1 t2 = 
   let list=(list_sub_au t1 t2) in
 begin
@@ -232,33 +259,34 @@ begin
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
     |_ -> varZ()
 end
+```
 
-type: po -> po -> po
-Fait l'anti-unification des termes t1 et t2
+Type: `po -> po -> po`
+##### Fait l'anti-unification des termes t1 et t2
 --------------------------------------------------------------------------------
 
-Jeux d’essais:
+# Jeux d’essais
 
-Pour facilité la lisibilité des termes du premier ordre on va noté les variables 
-par des majuscules et les fonctions par des minuscules au lieu d'utilier Var et 
-Func.
+Pour faciliter la lisibilité des termes du premier ordre, on va noter les variables 
+par des majuscules et les fonctions par des minuscules au lieu d'utiliser `Var` et 
+`Func`.
 
-Jeux d’essais avec l'unification:
+## Jeux d’essais avec l'unification
 
-unif X f(Y,a) -> f(Y,a)
-unif f(Y,Y) g(X) -> TOP
-unif f(Y,Y) f(X) -> TOP
-unif f(Y,Y) f(a,b) -> f(a,a)
-unif f(X,Y) f(a,g(Z)) -> f(a,g(Z))
-unif f(X,g(Y,U)) f(a,g(Z)) -> TOP
-unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(a,g(Z,P))
+`unif X f(Y,a) -> f(Y,a)`
+`unif f(Y,Y) g(X) -> TOP`
+`unif f(Y,Y) f(X) -> TOP`
+`unif f(Y,Y) f(a,b) -> f(a,a)`
+`unif f(X,Y) f(a,g(Z)) -> f(a,g(Z))`
+`unif f(X,g(Y,U)) f(a,g(Z)) -> TOP`
+`unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(a,g(Z,P))`
 
-Jeux d’essais avec l'anti-unification:
+## Jeux d’essais avec l'anti-unification
 
-anti_unif X f(Y,a) -> Z0
-anti_unif f(Y,Y) g(X) -> Z0
-anti_unif f(Y,Y) f(X) -> Echec
-anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2) (bug pas corrige)
-anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)
-anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec
-anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))
+`anti_unif X f(Y,a) -> Z0`
+`anti_unif f(Y,Y) g(X) -> Z0`
+`anti_unif f(Y,Y) f(X) -> Echec`
+`anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2)` (bug pas corrige)
+`anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)`
+`anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec`
+`anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))`
