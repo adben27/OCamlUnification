@@ -49,6 +49,8 @@ fonctions (celle du premier ordre), la fonction qui prend des termes du premier
 ordre nous est utile car elle permet de faire la liste des substitutions avec 
 une variable et un terme quelconque du premier ordre
 
+Un autre problème est lié à l'indice dans la liste d'antiunif. Tout d'abord, l'indice commence à 0 et s'incrémente pendant l'algo, mais on a pas trouvé de moyen de le réinitialiser à la fin, mais une alternative est de lancer `indice := 0` dans le toplevel pour réinitialiser l'indice. 
+
 
 # Listing du code
 
@@ -319,7 +321,7 @@ unif h(X,f(Y),a) h(X,f(a),Y) -> h(X1,f(a),a)
 anti_unif X f(Y,a) -> Z0
 anti_unif f(Y,Y) g(X) -> Z0
 anti_unif f(Y,Y) f(X) -> Echec
-anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2) (bug pas corrige)
+anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2)
 anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)
 anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec
 anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))
