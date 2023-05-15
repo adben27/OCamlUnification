@@ -183,12 +183,12 @@ begin
   |(t1::q1, t2::q2) -> begin
                         match (t1, t2) with
                         |(Var x, Var y) when x=y -> (list_subf_u q1 q2)
-                        |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+                        |(Var x, _) when (apparait x t2) -> raise (Echec "TOP")
                         |(Var x, _) -> (Var x, t2)::(list_subf_u q1 q2)
-                        |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+                        |(_, Var y) when (apparait y t1) -> raise (Echec "TOP")
                         |(_, Var y) -> (Var y, t1)::(list_subf_u q1 q2)
                         |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_u arg1 arg2)@(list_subf_u q1 q2)
-                        |_ -> raise (Echec "non unifiable")
+                        |_ -> raise (Echec "TOP")
                        end
 end
 ```
@@ -201,12 +201,12 @@ let rec list_subs_u t1 t2 =
 begin
   match (t1, t2) with
   |(Var x, Var y) when x=y -> []
-  |(Var x, _) when (apparait x t2) -> raise (Echec "non unifiable")
+  |(Var x, _) when (apparait x t2) -> raise (Echec "TOP")
   |(Var x, _) -> [(Var x, t2)]
-  |(_, Var y) when (apparait y t1) -> raise (Echec "non unifiable")
+  |(_, Var y) when (apparait y t1) -> raise (Echec "TOP")
   |(_, Var y) -> [(Var y, t1)]
   |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> list_subf_u arg1 arg2
-  |_ -> raise (Echec "non unifiable") (*Pour avoir un match exhaustive*)
+  |_ -> raise (Echec "TOP") (*Pour avoir un match exhaustive*)
 end
 ```
 
@@ -231,11 +231,13 @@ Type: `(po *po) t -> po -> po`
 --------------------------------------------------------------------------------
 ```
 let unif po1 po2=
-let list = list_subs_u po1 po2 in
+let t2 = getVcommun po1 po2 in
+let t1 = getVcommun po2 po1 in
+let list = list_subs_u t1 t2 in
 begin
-  try (sub_lu list po1) with
-  |Not_found -> sub_lu list po2
-  |Echec x-> Var "TOP"
+  try (sub_lu list t1) with
+  |Not_found -> sub_lu list t2
+  |Echec x -> sub_lu list t2
 end
 ```
 
@@ -254,7 +256,7 @@ begin
                         |(Var x, _) -> ((Var x, t2), varZ())::(list_subf_au q1 q2)
                         |(_, Var y) -> ((t1, Var y), varZ())::(list_subf_au q1 q2)
                         |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_au arg1 arg2)@(list_subf_au q1 q2)
-                        |_ -> raise (Echec "non unifiable")
+                        |_ -> ((t1, t2), varZ())::(list_subf_au q1 q2) (*Jamais le cas car il est traite dans 'list_sub_au', c'est pour avoir un match exhaustive*)
                       end
 end
 ```
@@ -270,7 +272,8 @@ begin
   |(Var x, _) -> [((t1, t2), varZ())]
   |(_, Var x) -> [((t1, t2), varZ())]
   |(Func(f, arg1), Func(g, arg2)) when ((equal_first t1 t2)) -> list_subf_au arg1 arg2
-  |(Func(f, arg1), Func(g, arg2)) -> [((t1, t2), varZ())] (*f et g different*)
+  |(Func(f, arg1), Func(g, arg2)) when (f<>g) && ((arite t1)=0) -> [((t1, t2), varZ())] (*f et g different*)
+  |_ -> raise (Echec "Certaines fonctions n'ont pas la même arite")
 end
 ```
 
@@ -278,13 +281,13 @@ Type: `po -> po -> ((po * po) * po) t`
 ##### Renvoie la liste des substitutions pour anti-unif
 --------------------------------------------------------------------------------
 ```
-let rec anti_unif t1 t2 = 
-  let list=(list_sub_au t1 t2) in
+let rec anti_unif t1 t2 =
 begin
   match (t1,t2) with
-    |(Var x, _) -> indice:=0; (getAsso (t1,t2) list)
-    |(_, Var x) -> indice:=0; (getAsso (t1,t2) list)
+    |(Var x, _) -> (getAsso (t1,t2) (list_sub_au t1 t2))
+    |(_, Var x) -> (getAsso (t1,t2) (list_sub_au t1 t2))
     |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> Func(f, map2 anti_unif arg1 arg2)
+    |(Func(f, arg1), Func(g, arg2)) when (not(equal_first t1 t2)) && f=g -> raise (Echec "Certaines fonctions n'ont pas la même arite")
     |_ -> varZ()
 end
 ```
