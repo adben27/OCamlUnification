@@ -305,6 +305,7 @@ par des majuscules et les fonctions par des minuscules au lieu d'utiliser `Var` 
 unif X f(Y,a) -> f(Y,a)
 unif f(Y,Y) g(X) -> TOP
 unif f(Y,Y) f(X) -> TOP
+unif f(f(X)) f(X) -> f(f(X))
 unif f(Y,Y) f(a,b) -> f(a,a)
 unif f(X,Y) f(a,g(Z)) -> f(a,g(Z))
 unif f(X,g(Y,U)) f(a,g(Z)) -> TOP
