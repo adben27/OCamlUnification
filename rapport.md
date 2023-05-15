@@ -52,9 +52,37 @@ une variable et un terme quelconque du premier ordre
 
 # Listing du code
 
-- PRECISION: On utilise le module List et dans ce module il y a un allias de 'list'
-           qui est 't' donc si vous voyez 'list ou 't' cela veut dire la même chose
+- <u>PRECISION</u>: On utilise le module List et dans ce module il y a un alias de `List`
+           qui est `t` donc si vous voyez `List` ou `t` cela veut dire la même chose
 
+--------------------------------------------------------------------------------
+```
+let string_of_po t = match t with
+        | Var s -> s
+        | Func(s, args) -> s;;
+
+```
+
+Type : `po -> string`
+##### Renvoie le string en argument de `Var` ou `Func`
+--------------------------------------------------------------------------------
+```
+let rec print_po p =
+  match p with
+  | Var s -> Printf.printf "%s" s
+  | Func (f, args) ->
+      Printf.printf "%s(" f;
+      print_list args;
+      Printf.printf ")"
+
+and print_list = function
+  | [] -> ()
+  | [x] -> print_po x
+  | x::xs -> print_po x; Printf.printf ", "; print_list xs;;
+```
+
+Type : `print_po : po -> unit` et `print_list : po list -> unit`
+##### Imprime un terme du premier ordre en utilisant notamment une fonction `print_list` qui print une liste
 --------------------------------------------------------------------------------
 ```
 let indice = ref 0
