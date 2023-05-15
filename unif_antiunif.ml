@@ -139,10 +139,12 @@ end
   renvoie Not_found (voir getAsso) alors qu'il ne devrai pas mais si on fait (subl (list_subs_u po1 po2) po2)
   au lieu de (subl (list_subs_u po1 po2) po1) on resout le problème du Not_found*)
 let unif po1 po2=
-let list = list_subs_u po1 po2 in
+let t2 = getVcommun po1 po2 in
+let list = list_subs_u po1 t2 in
 begin
   try (sub_lu list po1) with
-  |Not_found -> sub_lu list po2
+  |Not_found -> sub_lu list t2
+  |Echec x -> sub_lu list t2
 end
 
 (*Renvoie la liste des substitutions des arguments de 2 fonctions pour anti-unif*)

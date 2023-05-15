@@ -309,6 +309,7 @@ unif f(Y,Y) f(a,b) -> f(a,a)
 unif f(X,Y) f(a,g(Z)) -> f(a,g(Z))
 unif f(X,g(Y,U)) f(a,g(Z)) -> TOP
 unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(a,g(Z,P))
+unif h(X,f(Y),a) h(X,f(a),Y) -> h(X1,f(a),a)
 ```
 
 ## Jeux d’essais avec l'anti-unification
@@ -321,4 +322,5 @@ anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2) (bug pas corrige)
 anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)
 anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec
 anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))
+unif h(X,f(Y),X) h(a,f(b),a) -> h(Z0, f(Z1), Z2) bug doit renvoyer h(Z0, f(Z1), Z0)
 ```
