@@ -160,7 +160,7 @@ begin
                         |(Var x, _) -> ((Var x, t2), varZ())::(list_subf_au q1 q2)
                         |(_, Var y) -> ((t1, Var y), varZ())::(list_subf_au q1 q2)
                         |(Func(f, arg1), Func(g, arg2)) when (equal_first t1 t2) -> (list_subf_au arg1 arg2)@(list_subf_au q1 q2)
-                        |_ -> raise (Echec "TOP")
+                        |_ -> ((t1, t2), varZ())::(list_subf_au q1 q2) (*Jamais le cas car il est traite dans 'list_sub_au', c'est pour avoir un match exhaustive*)
                       end
 end
 
@@ -172,7 +172,7 @@ begin
   |(Var x, _) -> [((t1, t2), varZ())]
   |(_, Var x) -> [((t1, t2), varZ())]
   |(Func(f, arg1), Func(g, arg2)) when ((equal_first t1 t2)) -> list_subf_au arg1 arg2
-  |(Func(f, arg1), Func(g, arg2)) when f<>g -> [((t1, t2), varZ())] (*f et g different*)
+  |(Func(f, arg1), Func(g, arg2)) when (f<>g) && ((arite t1)=0) -> [((t1, t2), varZ())] (*f et g different*)
   |_ -> raise (Echec "Certaines fonctions n'ont pas la même arite")
 end
 
