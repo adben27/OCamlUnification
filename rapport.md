@@ -10,25 +10,15 @@
 Le but du projet est d’implémenter en OCaml les algorithmes d’unification et 
 d’anti-unification.
 
-Pour implémenter l'algorithme d'unification on a choisit de représenter le 
-systeme d'équation qui permet l'unification de deux termes du premier ordre par 
-une liste de couple de terme du premier ordre, par exemple le système d'équation
-`x=f(y) | y=a` (a est une constante) qui veut dire "remplacer tout les "x" par 
-"f(y)" et tout les "y" par "a" sera représenté par la liste 
-`[(Var "x", Func("f", [Var "y"])); (Var "y", Func("a", []))]`, le premier élément 
-d'un couple est ce que l'on veut remplacer et le deuxième élément est ce par
-quoi on veut remplacer le premier élément. et on applique ces substitutions à 
-l'un des deux termes, et si on a une exception alors on applique ces substitutions à
-l'autre terme.
+Pour implémenter l'algorithme d'unification, on a choisi de représenter le système d'équations qui permet l'unification de deux termes du premier ordre par une liste de couple de terme du premier ordre, par exemple le système d'équations `x=f(y) | y=a` (a est une constante) qui veut dire "remplacer tout les `x`" par `f(y)` et tout les "y" par "a" sera représenté par la liste `[(Var "x", Func("f", [Var "y"])); (Var "y", Func("a", []))]`.
+Le premier élément d'un couple est ce que l'on veut remplacer et le deuxième élément est ce par quoi on veut remplacer le premier élément. 
+Et on applique ces substitutions à l'un des deux termes, et si on a une exception alors on applique ces substitutions à l'autre terme.
 
 Pour implémenter l'algorithme d'anti-unification on représente le système 
 d'équation de la même manière que pour l'unification mais le premier élément du
 couple est un couple qui est le même que celui de l'unification et le deuxième
-élément est la variable qui va remplacer ces deux termes, par exemple on veut
-faire l'anti-unification de `h(x,f(y),x)` avec `h(a,f(b),a)` on aura alors la
-liste `[((Var "y", Func("b", [])), Var "Z1"); ((Var "x", Func("a", [])), Var "Z0)]`
-et on applique renvoie le terme "Var Zi" si le pattern des deux termes du premier
-ordre qu'on veut anti-unifier est dans la liste des substitutions.
+élément est la variable qui va remplacer ces deux termes
+Par exemple on veut faire l'anti-unification de `h(x,f(y),x)` avec `h(a,f(b),a)` on aura alors la liste `[((Var "y", Func("b", [])), Var "Z1"); ((Var "x", Func("a", [])), Var "Z0)]` et on applique et renvoie le terme "Var Zi" si le pattern des deux termes du premier ordre qu'on veut anti-unifier est dans la liste des substitutions.
 
 
 # Choix d’implémentation et des problèmes rencontrés
@@ -48,6 +38,9 @@ utile car elle permet de faire la liste des substitutions sur les arguments des
 fonctions (celle du premier ordre), la fonction qui prend des termes du premier 
 ordre nous est utile car elle permet de faire la liste des substitutions avec 
 une variable et un terme quelconque du premier ordre
+
+Un autre problème est lié à l'indice dans la liste d'antiunif. Tout d'abord, l'indice commence à 0 et s'incrémente pendant l'algo, mais on a pas trouvé de moyen de le réinitialiser à la fin, mais une alternative est de lancer `indice := 0` dans le toplevel pour réinitialiser l'indice. 
+Un autre problème lié à l'indice est que bien qu'on ait deux substitutions identiques, elles n'ont pas le même Z.
 
 
 # Listing du code
@@ -322,9 +315,9 @@ unif h(X,f(Y),a) h(X,f(a),Y) -> h(X1,f(a),a)
 anti_unif X f(Y,a) -> Z0
 anti_unif f(Y,Y) g(X) -> Z0
 anti_unif f(Y,Y) f(X) -> Echec
-anti_unif f(Y,Y) f(a,b) -> f(Z1,Z2) (bug pas corrige)
-anti_unif f(X,Y) f(a,g(Z)) -> f(Z1,Z2)
+anti_unif f(Y,Y) f(a,b) -> f(Z0,Z1)
+anti_unif f(X,Y) f(a,g(Z)) -> f(Z0,Z1)
 anti_unif f(X,g(Y,U)) f(a,g(Z)) -> Echec
-anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z2,g(Z3,Z4))
-unif h(X,f(Y),X) h(a,f(b),a) -> h(Z0, f(Z1), Z2) bug doit renvoyer h(Z0, f(Z1), Z0)
+anti_unif f(X,g(Y,U)) f(a,g(Z,P)) -> f(Z0,g(Z1,Z2))
+anti_unif h(X,f(Y),X) h(a,f(b),a) -> h(Z0, f(Z1), Z2) bug doit renvoyer h(Z0, f(Z1), Z0)
 ```
