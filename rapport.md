@@ -50,6 +50,7 @@ ordre nous est utile car elle permet de faire la liste des substitutions avec
 une variable et un terme quelconque du premier ordre
 
 Un autre problème est lié à l'indice dans la liste d'antiunif. Tout d'abord, l'indice commence à 0 et s'incrémente pendant l'algo, mais on a pas trouvé de moyen de le réinitialiser à la fin, mais une alternative est de lancer `indice := 0` dans le toplevel pour réinitialiser l'indice. 
+Un autre problème lié à l'indice est que bien qu'on ait deux substitutions identiques, elles n'ont pas le même Z.
 
 
 # Listing du code
